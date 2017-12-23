@@ -69,33 +69,46 @@ class Renderer {
     });
   }
 
+  _getTileScreenPosition(tile, center, tileSize) {
+    return {
+      x: this.width / 2 - (center.x - tile.x) * tileSize,
+      y: this.height / 2 - (center.y - tile.y) * tileSize,
+    };
+  }
+
+  _isTileVisible(tile, center, tileSize, gridSize) {
+    const position = this._getTilePosition(tile, center, tileSize);
+    return !(
+      tile.y < 0 ||
+      tile.y >= gridSize ||
+      position.x + tileSize < 0 ||
+      position.y + tileSize < 0 ||
+      position.x > this.width ||
+      position.y > this.height
+    );
+  }
+
   _visibleTiles(center, zoom) {
     const z = utils.baseZoom(zoom);
     center = utils.ll2tile(center.lon, center.lat, z);
-    
+
     const tiles = [];
     const tileSize = utils.tilesizeAtZoom(zoom);
-    
+
     for (let y = Math.floor(center.y) - 1; y <= Math.floor(center.y) + 1; y++) {
       for (let x = Math.floor(center.x) - 1; x <= Math.floor(center.x) + 1; x++) {
         const tile = {x, y, z};
-        const position = {
-          x: this.width / 2 - (center.x - tile.x) * tileSize,
-          y: this.height / 2 - (center.y - tile.y) * tileSize,
-        };
-        
+        const position = this._getTileScreenPosition(tile, center, tileSize);
         const gridSize = Math.pow(2, z);
-        
+
         tile.x %= gridSize;
-        
-        if (tile.x < 0) {
+
+        if (tile.x < 0)
           tile.x = z === 0 ? 0 : tile.x + gridSize;
-        }
-        
-        if (tile.y < 0 || tile.y >= gridSize || position.x + tileSize < 0 || position.y + tileSize < 0 || position.x > this.width || position.y > this.height) {
+
+        if (!this._isTileVisible(tile, center, tileSize, gridSize))
           continue;
-        }
-        
+
         tiles.push({
           xyz: tile,
           zoom,
