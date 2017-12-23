@@ -97,6 +97,15 @@ class Mapscii {
     this._resizeRenderer();
     this.zoom = (config.initialZoom !== null) ? config.initialZoom : this.minZoom;
   }
+  
+  _isMouseEventOnScreen(event) {
+    return !(
+      event.x < 0 ||
+      event.x > this.width/2 ||
+      event.y < 0 ||
+      event.y > this.height/4
+    );
+  }
 
   _resizeRenderer() {
     if (config.size) {
@@ -128,9 +137,7 @@ class Mapscii {
   }
 
   _onClick(event) {
-    if (event.x < 0 || event.x > this.width/2 || event.y < 0 || event.y > this.height/4) {
-      return;
-    }
+    if (!this._isMouseEventOnScreen(event)) return;
     this._updateMousePosition(event);
 
     if (this.mouseDragging && event.button === 'left') {
@@ -150,12 +157,8 @@ class Mapscii {
   }
 
   _onMouseMove(event) {
-    if (event.x < 0 || event.x > this.width/2 || event.y < 0 || event.y > this.height/4) {
-      return;
-    }
-    if (config.mouseCallback && !config.mouseCallback(event)) {
-      return;
-    }
+    if (!this._isMouseEventOnScreen(event)) return;
+    if (config.mouseCallback && !config.mouseCallback(event)) return;
 
     // start dragging
     if (event.button === 'left') {
