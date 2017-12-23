@@ -138,7 +138,7 @@ class Renderer {
       if (!layer) {
         continue;
       }
-      
+
       const scale = layer.extent / utils.tilesizeAtZoom(zoom);
       layers[layerId] = {
         scale: scale,
@@ -156,7 +156,7 @@ class Renderer {
 
   _renderTiles(tiles) {
     const labels = [];
-    
+
     const drawOrder = this._generateDrawOrder(tiles[0].xyz.z);
     for (const layerId of drawOrder) {
       for (const tile of tiles) {
@@ -208,7 +208,7 @@ class Renderer {
     } else if (feature.style.maxzoom && tile.zoom > feature.style.maxzoom) {
       return false;
     }
-    
+
     switch (feature.style.type) {
       case 'line': {
         let width = feature.style.paint['line-width'];
@@ -232,11 +232,11 @@ class Renderer {
       case 'symbol': {
         const genericSymbol = config.poiMarker;
         const text = feature.label || config.poiMarker;
-        
+
         if (this._seen[text] && !genericSymbol) {
           return false;
         }
-        
+
         placed = false;
         const pointsOfInterest = this._scaleAndReduce(tile, feature, feature.points, scale);
         for (const point of pointsOfInterest) {
@@ -270,12 +270,12 @@ class Renderer {
     let lastY;
     let outside;
     const scaled = [];
-    
+
     const minX = -this.tilePadding;
     const minY = -this.tilePadding;
     const maxX = this.width + this.tilePadding;
     const maxY = this.height + this.tilePadding;
-    
+
     for (const point of points) {
       const x = Math.floor(tile.position.x + (point.x / scale));
       const y = Math.floor(tile.position.y + (point.y / scale));

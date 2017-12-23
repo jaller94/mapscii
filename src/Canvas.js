@@ -163,7 +163,7 @@ class Canvas {
     const a = this._bresenham(pointB, pointC);
     const b = this._bresenham(pointA, pointC);
     const c = this._bresenham(pointA, pointB);
-    
+
     const points = a.concat(b).concat(c).filter((point) => {
       var ref;
       return (0 <= (ref = point.y) && ref < this.height);
@@ -174,11 +174,11 @@ class Canvas {
         return a.y - b.y;
       }
     });
-    
+
     for (let i = 0; i < points.length; i++) {
       const point = points[i];
       const next = points[i * 1 + 1];
-      
+
       if (point.y === (next || {}).y) {
         const left = Math.max(0, point.x);
         const right = Math.min(this.width - 1, next.x);
