@@ -77,7 +77,7 @@ class Renderer {
   }
 
   _isTileVisible(tile, center, tileSize, gridSize) {
-    const position = this._getTilePosition(tile, center, tileSize);
+    const position = this._getTileScreenPosition(tile, center, tileSize);
     return !(
       tile.y < 0 ||
       tile.y >= gridSize ||
