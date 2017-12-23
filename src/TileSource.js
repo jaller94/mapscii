@@ -31,15 +31,15 @@ const modes = {
 class TileSource {
   init(source) {
     this.source = source;
-    
+
     this.cache = {};
     this.cacheSize = 16;
     this.cached = [];
-    
+
     this.mode = null;
     this.mbtiles = null;
     this.styler = null;
-    
+
     if (this.source.startsWith('http')) {
       if (config.persistDownloadedTiles) {
         this._initPersistence();
@@ -79,19 +79,19 @@ class TileSource {
     if (!this.mode) {
       throw new Error('no TileSource defined');
     }
-    
+
     const cached = this.cache[[z, x, y].join('-')];
     if (cached) {
       return Promise.resolve(cached);
     }
-    
+
     if (this.cached.length > this.cacheSize) {
       const overflow = Math.abs(this.cacheSize - this.cache.length);
       for (const tile in this.cached.splice(0, overflow)) {
         delete this.cache[tile];
       }
     }
-  
+
     switch (this.mode) {
       case modes.MBTiles:
         return this._getMBTile(z, x, y);
@@ -134,7 +134,7 @@ class TileSource {
   _createTile(z, x, y, buffer) {
     const name = [z, x, y].join('-');
     this.cached.push(name);
-    
+
     const tile = this.cache[name] = new Tile(this.styler);
     return tile.load(buffer);
   }

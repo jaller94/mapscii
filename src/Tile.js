@@ -62,7 +62,7 @@ class Tile {
       for (let i = 0; i < layer.length; i++) {
         // TODO: caching of similar attributes to avoid looking up the style each time
         //continue if @styler and not @styler.getStyleFor layer, feature
-        
+
         const feature = layer.feature(i);
         feature.properties.$type = [undefined, 'Point', 'LineString', 'Polygon'][feature.type];
         let style;
