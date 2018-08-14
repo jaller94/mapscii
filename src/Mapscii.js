@@ -54,6 +54,10 @@ class Mapscii {
       this._draw();
       this.notify('Welcome to MapSCII! Use your cursors to navigate, a/z to zoom, q to quit.');
       resolve();
+    }).catch((error) => {
+      console.error('An error occured while starting Mapscii.');
+      console.error(error);
+      process.exit(1);
     });
   }
 
