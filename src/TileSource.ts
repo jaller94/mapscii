@@ -38,9 +38,9 @@ class TileSource {
   private cached: unknown[];
   public mode: Mode | null;
   private mbtiles: MBTiles | null;
-  private styler: Styler;
+  private styler: Styler | null;
 
-  init(source: string): void {
+  async init(source: string): Promise<void> {
     this.source = source;
     
     this.cache = {};
@@ -64,13 +64,13 @@ class TileSource {
       }
 
       this.mode = Mode.MBTiles;
-      this.loadMBTiles(source);
+      await this.loadMBTiles(source);
     } else {
       throw new Error('source type isn\'t supported yet');
     }
   }
 
-  loadMBTiles(source): Promise<void> {
+  loadMBTiles(source: string): Promise<void> {
     return new Promise((resolve, reject) => {
       new MBTiles(`${source}?mode=ro`, (err, mbtiles) => {
         if (err) {
@@ -82,7 +82,7 @@ class TileSource {
     });
   }
 
-  useStyler(styler) {
+  useStyler(styler: Styler) {
     this.styler = styler;
   }
 
@@ -142,7 +142,7 @@ class TileSource {
     });
   }
 
-  private _createTile(z: number, x: number, y: number, buffer) {
+  private _createTile(z: number, x: number, y: number, buffer:) {
     const name = [z, x, y].join('-');
     this.cached.push(name);
     
@@ -158,7 +158,7 @@ class TileSource {
     }
   }
 
-  private _persistTile(z, x, y, buffer) {
+  private _persistTile(z: number, x: number, y: number, buffer: Uint8Array) {
     const zoom = z.toString();
     this._createFolder(path.join(paths.cache, zoom));
     const filePath = path.join(paths.cache, zoom, `${x}-${y}.pbf`);

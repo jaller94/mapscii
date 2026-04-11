@@ -40,7 +40,7 @@ class Tile {
     this.styler = styler;
   }
 
-  load(buffer: Buffer) {
+  load(buffer: Uint8Array) {
     return this._unzipIfNeeded(buffer).then((buffer) => {
       return this._loadTile(buffer);
     }).then(() => {
@@ -69,7 +69,7 @@ class Tile {
     });
   }
 
-  private _isGzipped(buffer): boolean {
+  private _isGzipped(buffer: Buffer): boolean {
     return buffer.slice(0, 2).indexOf(Buffer.from([0x1f, 0x8b])) === 0;
   }
 
