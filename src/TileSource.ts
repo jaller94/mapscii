@@ -8,7 +8,6 @@
 */
 import fs from 'node:fs';
 import path from 'node:path';
-import fetch from 'node-fetch';
 import envPaths from 'env-paths';
 const paths = envPaths('mapscii');
 
@@ -16,70 +15,28 @@ import config from './config.ts';
 import Tile from './Tile.ts';
 import Styler from './Styler.ts';
 
-// https://github.com/mapbox/node-mbtiles has native build dependencies (sqlite3)
-// To maximize MapSCII’s compatibility, MBTiles support must be manually added via
-// $> npm install -g @mapbox/mbtiles
-// let MBTiles = null;
-// try {
-//   MBTiles = await import('@mapbox/mbtiles');
-// } catch {void 0;}
-import MBTiles from '@mapbox/mbtiles';
-
-export enum Mode {
-  MBTiles = 1,
-  VectorTile = 2,
-  HTTP = 3,
-};
+export type Mode = "VectorTile" | "HTTP";
 
 class TileSource {
-  private source: string;
-  private cache: Record<string, unknown>;
-  private cacheSize: number;
-  private cached: unknown[];
-  public mode: Mode | null;
-  private mbtiles: MBTiles | null;
-  private styler: Styler | null;
+  private source: string | null = null;
+  private cache: Record<string, unknown> = {};
+  private cacheSize: number = 16;
+  private cached: unknown[] = [];
+  public mode: Mode | null = null;
+  private styler: Styler | null = null;
 
   async init(source: string): Promise<void> {
     this.source = source;
-    
-    this.cache = {};
-    this.cacheSize = 16;
-    this.cached = [];
-    
-    this.mode = null;
-    this.mbtiles = null;
-    this.styler = null;
-    
+
     if (this.source.startsWith('http')) {
       if (config.persistDownloadedTiles) {
         this._initPersistence();
       }
 
-      this.mode = Mode.HTTP;
-
-    } else if (this.source.endsWith('.mbtiles')) {
-      if (!MBTiles) {
-        throw new Error('MBTiles support must be installed with following command: \'npm install -g @mapbox/mbtiles\'');
-      }
-
-      this.mode = Mode.MBTiles;
-      await this.loadMBTiles(source);
+      this.mode = 'HTTP';
     } else {
       throw new Error('source type isn\'t supported yet');
     }
-  }
-
-  loadMBTiles(source: string): Promise<void> {
-    return new Promise((resolve, reject) => {
-      new MBTiles(`${source}?mode=ro`, (err, mbtiles) => {
-        if (err) {
-          reject(err);
-        }
-        this.mbtiles = mbtiles;
-        resolve();
-      });
-    });
   }
 
   useStyler(styler: Styler) {
@@ -104,9 +61,7 @@ class TileSource {
     }
   
     switch (this.mode) {
-      case Mode.MBTiles:
-        return this._getMBTile(z, x, y);
-      case Mode.HTTP:
+      case "HTTP":
         return this._getHTTP(z, x, y);
     }
   }
@@ -118,31 +73,20 @@ class TileSource {
       promise = Promise.resolve(persistedTile);
     } else {
       promise = fetch(this.source + [z,x,y].join('/') + '.pbf')
-        .then((res) => res.buffer())
-        .then((buffer) => {
+        .then((res) => res.bytes())
+        .then((bytes) => {
           if (config.persistDownloadedTiles) {
-            this._persistTile(z, x, y, buffer);
-            return buffer;
+            this._persistTile(z, x, y, bytes);
+            return bytes;
           }
         });
     }
-    return promise.then((buffer) => {
-      return this._createTile(z, x, y, buffer);
+    return promise.then((bytes) => {
+      return this._createTile(z, x, y, bytes);
     });
   }
 
-  private _getMBTile(z: number, x: number, y: number) {
-    return new Promise((resolve, reject) => {
-      this.mbtiles.getTile(z, x, y, (err, buffer) => {
-        if (err) {
-          reject(err);
-        }
-        resolve(this._createTile(z, x, y, buffer));
-      });
-    });
-  }
-
-  private _createTile(z: number, x: number, y: number, buffer:) {
+  private _createTile(z: number, x: number, y: number, buffer: Uint8Array) {
     const name = [z, x, y].join('-');
     this.cached.push(name);
     
@@ -162,7 +106,7 @@ class TileSource {
     const zoom = z.toString();
     this._createFolder(path.join(paths.cache, zoom));
     const filePath = path.join(paths.cache, zoom, `${x}-${y}.pbf`);
-    return fs.writeFile(filePath, buffer, () => null);
+    fs.writeFile(filePath, buffer, () => null);
   }
 
   private _getPersited(z: number, x: number, y: number) {
@@ -178,7 +122,7 @@ class TileSource {
       fs.mkdirSync(path);
       return true;
     } catch (error) {
-      if (error.code === 'EEXIST') return true;
+      if (typeof error === 'object' && error !== null && 'code' in error && error.code === 'EEXIST') return true;
       throw error;
     }
   }

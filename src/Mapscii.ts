@@ -13,7 +13,7 @@ import TermMouse from 'term-mouse';
 import type Canvas from './Canvas.ts';
 import Renderer from './Renderer.ts';
 import TileSource from './TileSource.ts';
-import utils from './utils.ts';
+import { baseZoom, digits, ll2tile, normalize, tile2ll, tilesizeAtZoom } from './utils.ts';
 import globalConfig from './config.ts';
 
 let config = globalConfig;
@@ -130,13 +130,13 @@ class Mapscii {
       y: (y-0.5)*4,
     };
 
-    const size = utils.tilesizeAtZoom(this.zoom);
+    const size = tilesizeAtZoom(this.zoom);
     const [dx, dy] = [projected.x - this.width / 2, projected.y - this.height / 2];
 
-    const z = utils.baseZoom(this.zoom);
-    const center = utils.ll2tile(this.center.lon, this.center.lat, z);
+    const z = baseZoom(this.zoom);
+    const center = ll2tile(this.center.lon, this.center.lat, z);
 
-    return utils.normalize(utils.tile2ll(center.x + (dx / size), center.y + (dy / size), z));
+    return normalize(tile2ll(center.x + (dx / size), center.y + (dy / size), z));
   }
 
   private _updateMousePosition(event: {x: number, y: number}): void {
@@ -170,16 +170,16 @@ class Mapscii {
     // the location the pointer ended up after zooming
     const offsetMouseLonLat = this._colrow2ll(event.x, event.y);
 
-    const z = utils.baseZoom(this.zoom);
+    const z = baseZoom(this.zoom);
     // the projected locations
-    const targetMouseTile = utils.ll2tile(targetMouseLonLat.lon, targetMouseLonLat.lat, z);
-    const offsetMouseTile = utils.ll2tile(offsetMouseLonLat.lon, offsetMouseLonLat.lat, z);
+    const targetMouseTile = ll2tile(targetMouseLonLat.lon, targetMouseLonLat.lat, z);
+    const offsetMouseTile = ll2tile(offsetMouseLonLat.lon, offsetMouseLonLat.lat, z);
 
     // the projected center
-    const centerTile = utils.ll2tile(this.center.lon, this.center.lat, z);
+    const centerTile = ll2tile(this.center.lon, this.center.lat, z);
 
     // calculate a new center that puts the pointer back in the target location
-    const offsetCenterLonLat = utils.tile2ll(
+    const offsetCenterLonLat = tile2ll(
       centerTile.x - (offsetMouseTile.x - targetMouseTile.x),
       centerTile.y - (offsetMouseTile.y - targetMouseTile.y),
       z
@@ -204,12 +204,12 @@ class Mapscii {
         const dx = (this.mouseDragging.x - event.x) * 2;
         const dy = (this.mouseDragging.y - event.y) * 4;
 
-        const size = utils.tilesizeAtZoom(this.zoom);
+        const size = tilesizeAtZoom(this.zoom);
 
-        const newCenter = utils.tile2ll(
+        const newCenter = tile2ll(
           this.mouseDragging.center.x + (dx / size),
           this.mouseDragging.center.y + (dy / size),
-          utils.baseZoom(this.zoom)
+          baseZoom(this.zoom)
         );
 
         this.setCenter(newCenter.lat, newCenter.lon);
@@ -220,7 +220,7 @@ class Mapscii {
         this.mouseDragging = {
           x: event.x,
           y: event.y,
-          center: utils.ll2tile(this.center.lon, this.center.lat, utils.baseZoom(this.zoom)),
+          center: ll2tile(this.center.lon, this.center.lat, baseZoom(this.zoom)),
         };
       }
     }
@@ -288,18 +288,18 @@ class Mapscii {
   }
 
   private _getFooter() {
-    // tile = utils.ll2tile(this.center.lon, this.center.lat, this.zoom);
-    // `tile: ${utils.digits(tile.x, 3)}, ${utils.digits(tile.x, 3)}   `+
+    // tile = ll2tile(this.center.lon, this.center.lat, this.zoom);
+    // `tile: ${digits(tile.x, 3)}, ${digits(tile.x, 3)}   `+
 
-    let footer = `center: ${utils.digits(this.center.lat, 3)}, ${utils.digits(this.center.lon, 3)} `;
-    footer += `  zoom: ${utils.digits(this.zoom, 2)} `;
+    let footer = `center: ${digits(this.center.lat, 3)}, ${digits(this.center.lon, 3)} `;
+    footer += `  zoom: ${digits(this.zoom, 2)} `;
     if (this.mousePosition !== null) {
-      footer += `  mouse: ${utils.digits(this.mousePosition.lat, 3)}, ${utils.digits(this.mousePosition.lon, 3)} `;
+      footer += `  mouse: ${digits(this.mousePosition.lat, 3)}, ${digits(this.mousePosition.lon, 3)} `;
     }
     return footer;
   }
 
-  notify(text) {
+  notify(text: string) {
     config.onUpdate && config.onUpdate();
     if (!config.headless) {
       this._write('\r\x1B[K' + text);
@@ -325,9 +325,9 @@ class Mapscii {
   }
 
   setCenter(lat: number, lon: number): void {
-    this.center = utils.normalize({
-      lon: lon,
-      lat: lat,
+    this.center = normalize({
+      lon,
+      lat,
     });
   }
 }

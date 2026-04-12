@@ -6,12 +6,12 @@
 */
 import RBush from 'rbush';
 import simplify from 'simplify-js';
-import x256 from 'x256';
+import x256 from './x256/index.ts';
 
 import Canvas from './Canvas.ts';
 import LabelBuffer from './LabelBuffer.ts';
 import Styler from './Styler.ts';
-import utils from './utils.ts';
+import { baseZoom, hex2rgb, ll2tile, tilesizeAtZoom } from './utils.ts';
 import config from './config.ts';
 import TileSource from './TileSource.ts';
 import Tile from './Tile.ts';
@@ -72,7 +72,7 @@ class Renderer {
     this.canvas = new Canvas(width, height);
   }
 
-  async draw(center, zoom: number): Promise<string> {
+  async draw(center: {lat: number, lon: number}, zoom: number): Promise<string | void> {
     if (this.isDrawing) return Promise.reject();
     this.isDrawing = true;
 
@@ -86,7 +86,7 @@ class Renderer {
       void 0
     );
     if (color) {
-      this.canvas?.setBackground(x256(utils.hex2rgb(color)));
+      this.canvas?.setBackground(x256(hex2rgb(color)));
     }
 
     this.canvas?.clear();
@@ -107,19 +107,19 @@ class Renderer {
     }
   }
 
-  private _visibleTiles(center, zoom) {
-    const z = utils.baseZoom(zoom);
-    center = utils.ll2tile(center.lon, center.lat, z);
+  private _visibleTiles(center: {lat: number, lon: number}, zoom: number) {
+    const z = baseZoom(zoom);
+    const centerXY = ll2tile(center.lon, center.lat, z);
     
     const tiles: Tile[] = [];
-    const tileSize = utils.tilesizeAtZoom(zoom);
+    const tileSize = tilesizeAtZoom(zoom);
     
-    for (let y = Math.floor(center.y) - 1; y <= Math.floor(center.y) + 1; y++) {
-      for (let x = Math.floor(center.x) - 1; x <= Math.floor(center.x) + 1; x++) {
+    for (let y = Math.floor(centerXY.y) - 1; y <= Math.floor(centerXY.y) + 1; y++) {
+      for (let x = Math.floor(centerXY.x) - 1; x <= Math.floor(centerXY.x) + 1; x++) {
         const tile = {x, y, z};
         const position = {
-          x: this.width / 2 - (center.x - tile.x) * tileSize,
-          y: this.height / 2 - (center.y - tile.y) * tileSize,
+          x: this.width / 2 - (centerXY.x - tile.x) * tileSize,
+          y: this.height / 2 - (centerXY.y - tile.y) * tileSize,
         };
         
         const gridSize = Math.pow(2, z);
@@ -160,7 +160,7 @@ class Renderer {
         continue;
       }
       
-      const scale = layer.extent / utils.tilesizeAtZoom(zoom);
+      const scale = layer.extent / tilesizeAtZoom(zoom);
       layers[layerId] = {
         scale,
         features: layer.tree.search({

@@ -11,10 +11,9 @@
 
   Will either be merged into node-drawille or become an own module at some point
 */
-import { Buffer } from 'node:buffer';
 import stringWidth from 'string-width';
 import config from './config.ts';
-import utils from './utils.ts';
+import { population } from './utils.ts';
 
 const asciiMap = {
   // '▬': [2+32, 4+64],
@@ -26,15 +25,15 @@ const asciiMap = {
   '▐': [16+32+64+128],
   // '▓': [1+4+32+128, 2+8+16+64],
   '█': [255],
-};
+} as const;
 const termReset = '\x1B[39;49m';
 
 class BrailleBuffer {
   private brailleMap: number[][];
-  private pixelBuffer: Buffer;
+  private pixelBuffer: Uint8Array;
   private charBuffer: string[];
-  private foregroundBuffer: Buffer;
-  private backgroundBuffer: Buffer;
+  private foregroundBuffer: Uint8Array;
+  private backgroundBuffer: Uint8Array;
   private height: number;
   private width: number;
   private globalBackground: number | null;
@@ -53,9 +52,9 @@ class BrailleBuffer {
     this.height = height;
 
     const size = width*height/8;
-    this.pixelBuffer = Buffer.alloc(size);
-    this.foregroundBuffer = Buffer.alloc(size);
-    this.backgroundBuffer = Buffer.alloc(size);
+    this.pixelBuffer = new Uint8Array(size);
+    this.foregroundBuffer = new Uint8Array(size);
+    this.backgroundBuffer = new Uint8Array(size);
 
     this._mapBraille();
     this.clear();
@@ -114,7 +113,7 @@ class BrailleBuffer {
       mask: number,
     }[] = [];
     for (const char in asciiMap) {
-      const bits: number[] | undefined = asciiMap[char];
+      const bits = asciiMap[char];
       if (!(bits instanceof Array)) continue;
       for (const mask of bits) {
         masks.push({
@@ -131,7 +130,7 @@ class BrailleBuffer {
     for (i = k = 1; k <= 255; i = ++k) {
       const braille = (i & 7) + ((i & 56) << 1) + ((i & 64) >> 3) + (i & 128);
       const char = masks.reduce((best, mask) => {
-        const covered = utils.population(mask.mask & braille);
+        const covered = population(mask.mask & braille);
         if (!best || best.covered < covered) {
           return {
             ...mask,

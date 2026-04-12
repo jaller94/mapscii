@@ -4,15 +4,14 @@
 
   Handling of and access to single VectorTiles
 */
-import { Buffer } from 'node:buffer';
 import zlib from 'node:zlib';
 import { VectorTile } from '@mapbox/vector-tile';
 import Protobuf from 'pbf';
 import RBush from 'rbush';
-import x256 from 'x256';
+import x256 from './x256/index.ts';
 
 import config from './config.ts';
-import utils from './utils.ts';
+import { hex2rgb } from './utils.ts';
 import Styler from './Styler.ts';
 import { Layers } from './Renderer.ts';
 
@@ -40,9 +39,9 @@ class Tile {
     this.styler = styler;
   }
 
-  load(buffer: Uint8Array) {
-    return this._unzipIfNeeded(buffer).then((buffer) => {
-      return this._loadTile(buffer);
+  load(bytes: Uint8Array) {
+    return this._unzipIfNeeded(bytes).then((bytes) => {
+      return this._loadTile(bytes);
     }).then(() => {
       return this._loadLayers();
     }).then(() => {
@@ -50,27 +49,27 @@ class Tile {
     });
   }
 
-  private _loadTile(buffer: Buffer) {
-    this.tile = new VectorTile(new Protobuf(buffer));
+  private _loadTile(bytes: Uint8Array) {
+    this.tile = new VectorTile(new Protobuf(bytes));
   }
 
-  private _unzipIfNeeded(buffer: Buffer): Promise<Buffer> {
+  private _unzipIfNeeded(bytes: Uint8Array): Promise<Uint8Array> {
     return new Promise((resolve, reject) => {
-      if (this._isGzipped(buffer)) {
-        zlib.gunzip(buffer, (err, data) => {
+      if (this._isGzipped(bytes)) {
+        zlib.gunzip(bytes, (err, data) => {
           if (err) {
             reject(err);
           }
           resolve(data);
         });
       } else {
-        resolve(buffer);
+        resolve(bytes);
       }
     });
   }
 
-  private _isGzipped(buffer: Buffer): boolean {
-    return buffer.slice(0, 2).indexOf(Buffer.from([0x1f, 0x8b])) === 0;
+  private _isGzipped(bytes: Uint8Array): boolean {
+    return bytes[0] === 0x1f && bytes[1] === 0x8b;
   }
 
   private _loadLayers(): Layers {
@@ -102,7 +101,7 @@ class Tile {
         if (color instanceof Object) {
           color = color.stops[0][1];
         }
-        const colorCode = colorCache[color] || (colorCache[color] = x256(utils.hex2rgb(color)));
+        const colorCode = colorCache[color] || (colorCache[color] = x256(hex2rgb(color)));
         // TODO: monkey patching test case for tiles with a reduced extent 4096 / 8 -> 512
         // use feature.loadGeometry() again as soon as we got a 512 extent tileset
         const geometries = feature.loadGeometry(); //@_reduceGeometry feature, 8

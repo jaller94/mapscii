@@ -32,7 +32,7 @@ export default class LabelBuffer {
     return [Math.floor(x/2), Math.floor(y/4)];
   }
 
-  writeIfPossible(text: string, x: number, y: number, feature, margin: number): boolean {
+  writeIfPossible(text: string, x: number, y: number, feature: Feature, margin: number): boolean {
     margin = margin || this.margin;
 
     const point = this.project(x, y);

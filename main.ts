@@ -14,7 +14,7 @@ import Mapscii from './src/Mapscii.ts';
 import yargs from 'yargs/yargs';
 import { hideBin } from 'yargs/helpers';
 
-const argv = yargs(hideBin(process.argv))
+const argv = await yargs(hideBin(process.argv))
   .option('latitude', {
     alias: 'lat',
     description: 'Latitude of initial centre',

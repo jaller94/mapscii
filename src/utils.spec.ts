@@ -1,5 +1,5 @@
-'use strict';
-const utils = require('./utils');
+import { describe, expect, test } from 'bun:test';
+import { hex2rgb, normalize } from './utils.ts';
 
 describe('utils', () => {
   describe('hex2rgb', () => {
@@ -11,13 +11,13 @@ describe('utils', () => {
       ['#888', 136, 136, 136],
     ])('when given "%s"', (input, r, g, b) => {
       test(`returns [${r},${g},${b}]`, () => {
-        expect(utils.hex2rgb(input)).toEqual([r, g, b]);
+        expect(hex2rgb(input)).toEqual([r, g, b]);
       });
     });
 
     test('throws an Error when given "33"', () => {
       function wrapper() {
-        utils.hex2rgb('33');
+        hex2rgb('33');
       }
       expect(wrapper).toThrow('isn\'t a supported hex color');
     });
@@ -41,7 +41,7 @@ describe('normalize', () => {
         lon: expected_lon,
         lat: expected_lat,
       };
-      expect(utils.normalize(input)).toEqual(expected);
+      expect(normalize(input)).toEqual(expected);
     });
   });
 });

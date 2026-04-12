@@ -4,9 +4,10 @@
   "description": "MapSCII is a Braille & ASCII world map renderer for your console, based on OpenStreetMap",
   "type": "module",
   "scripts": {
-    "lint": "deno lint",
+    "fmt": "deno fmt src",
+    "lint": "deno lint src",
     "start": "deno --allow-all main.ts",
-    "test": "deno test"
+    "test": "deno test src"
   },
   "repository": {
     "type": "git",
@@ -21,15 +22,14 @@
     "terminal",
     "ascii",
     "osm",
-    "vectortile",
-    "mbtiles"
+    "vectortile"
   ],
   "author": "Michael Straßburger <codepoet@cpan.org>",
   "license": "MIT",
   "dependencies": {
-    "@mapbox/mbtiles": "^0.12.1",
     "@mapbox/vector-tile": "^2.0.4",
     "@types/rbush": "^4.0.0",
+    "@types/yargs": "^17.0.35",
     "bresenham": "0.0.4",
     "earcut": "^3.0.2",
     "env-paths": "^4.0.0",
@@ -40,10 +40,10 @@
     "simplify-js": "^1.2.4",
     "string-width": "^8.2.0",
     "term-mouse": "^0.2.2",
-    "x256": "0.0.2",
     "yargs": "^18.0.0"
   },
   "devDependencies": {
+    "@types/deno": "^2.5.0",
     "@types/node": "^25.6.0"
   }
 }

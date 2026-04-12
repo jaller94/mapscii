@@ -34,15 +34,15 @@ class Canvas {
     this.buffer.clear();
   }
 
-  text(text: string, x: number, y: number, color, center = false) {
+  text(text: string, x: number, y: number, color: number, center = false) {
     this.buffer.writeText(text, x, y, color, center);
   }
 
-  line(from, to, color, width = 1) {
+  line(from: {x: number, y: number}, to: {x: number, y: number}, color: number, width = 1) {
     this._line(from.x, from.y, to.x, to.y, color, width);
   }
 
-  polyline(points, color, width = 1) {
+  polyline(points: {x: number, y: number}[], color: number, width = 1) {
     for (let i = 1; i < points.length; i++) {
       const x1 = points[i - 1].x;
       const y1 = points[i - 1].y;
@@ -50,15 +50,15 @@ class Canvas {
     }
   }
 
-  setBackground(color) {
+  setBackground(color: number) {
     this.buffer.setGlobalBackground(color);
   }
 
-  background(x, y, color) {
+  background(x: number, y: number, color: number) {
     this.buffer.setBackground(x, y, color);
   }
 
-  polygon(rings, color) {
+  polygon(rings, color: number) {
     const vertices: number[] = [];
     const holes: number[] = [];
     for (const ring of rings) {
@@ -95,7 +95,7 @@ class Canvas {
 
   // Inspired by Alois Zingl's "The Beauty of Bresenham's Algorithm"
   // -> http://members.chello.at/~easyfilter/bresenham.html
-  private _line(x0, y0, x1, y1, width, color) {
+  private _line(x0: number, y0: number, x1: number, y1: number, width: number, color: number) {
     // Fall back to width-less bresenham algorithm if we dont have a width
     if (!(width = Math.max(0, width - 1))) {
       return bresenham(x0, y0, x1, y1, (x, y) => {
@@ -149,21 +149,21 @@ class Canvas {
     /* eslint-enable */
   }
 
-  private _filledRectangle(x, y, width, height, color) {
-    const pointA = [x, y];
-    const pointB = [x + width, y];
-    const pointC = [x, y + height];
-    const pointD = [x + width, y + height];
+  private _filledRectangle(x: number, y: number, width: number, height: number, color: number) {
+    const pointA: [number, number] = [x, y];
+    const pointB: [number, number] = [x + width, y];
+    const pointC: [number, number] = [x, y + height];
+    const pointD: [number, number] = [x + width, y + height];
     this._filledTriangle(pointA, pointB, pointC, color);
     this._filledTriangle(pointC, pointB, pointD, color);
   }
 
-  private _bresenham(pointA, pointB) {
+  private _bresenham(pointA: [number, number], pointB: [number, number]) {
     return bresenham(pointA[0], pointA[1], pointB[0], pointB[1]);
   }
 
   // Draws a filled triangle
-  private _filledTriangle(pointA, pointB, pointC, color) {
+  private _filledTriangle(pointA: [number, number], pointB: [number, number], pointC: [number, number], color: number) {
     const a = this._bresenham(pointB, pointC);
     const b = this._bresenham(pointA, pointC);
     const c = this._bresenham(pointA, pointB);

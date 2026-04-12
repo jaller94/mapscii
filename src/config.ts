@@ -58,4 +58,4 @@ export default {
   delimeter: '\n\r',
 
   poiMarker: '◉',
-};
+} as const;
